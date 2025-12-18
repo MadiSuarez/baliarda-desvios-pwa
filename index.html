@@ -183,31 +183,38 @@
     document.getElementById("meta").textContent = `Resultados: ${filtered.length} / ${DATA.length} (ordenado por fecha desc)`;
   }
 
-  function load() {
-  document.getElementById("meta").textContent = "Cargando datos…";
+function load() {
+  const meta = document.getElementById("meta");
+  meta.textContent = "Cargando datos…";
 
-  // Nombre de la función callback (único para evitar cache)
   const cbName = "handleData_" + Date.now();
+  const sep = API_URL.includes("?") ? "&" : "?";
+  const src = `${API_URL}${sep}callback=${cbName}&nocache=${Date.now()}`;
+
+  const t = setTimeout(() => {
+    meta.textContent = "Timeout cargando datos. URL: " + src;
+  }, 8000);
 
   window[cbName] = (json) => {
+    clearTimeout(t);
     try {
       DATA = (json && json.data) ? json.data : [];
       DATA.sort((a,b) => (b.fechaISO || "").localeCompare(a.fechaISO || ""));
       render(DATA);
-      document.getElementById("meta").textContent = `Registros: ${DATA.length} (ordenado por fecha desc)`;
+      meta.textContent = `Registros: ${DATA.length} (ordenado por fecha desc)`;
     } finally {
-      // limpiar
       delete window[cbName];
       script.remove();
     }
   };
 
   const script = document.createElement("script");
-  const sep = API_URL.includes("?") ? "&" : "?";
-script.src = `${API_URL}${sep}callback=${cbName}&nocache=${Date.now()}`;
+  script.src = src;
+  script.async = true;
 
   script.onerror = () => {
-    document.getElementById("meta").textContent = "Error cargando datos.";
+    clearTimeout(t);
+    meta.textContent = "Error cargando script. URL: " + src;
     script.remove();
     delete window[cbName];
   };
@@ -216,16 +223,17 @@ script.src = `${API_URL}${sep}callback=${cbName}&nocache=${Date.now()}`;
 }
 
 
+
   document.getElementById("btnBuscar").addEventListener("click", applySearch);
   document.getElementById("q").addEventListener("keydown", (e) => {
     if (e.key === "Enter") applySearch();
   });
 
   load();
-  });
 </script>
 </body>
 </html>
+
 
 
 
