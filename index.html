@@ -203,7 +203,9 @@
   };
 
   const script = document.createElement("script");
-  script.src = `${API_URL}?callback=${cbName}&nocache=${Date.now()}`;
+  const sep = API_URL.includes("?") ? "&" : "?";
+script.src = `${API_URL}${sep}callback=${cbName}&nocache=${Date.now()}`;
+
   script.onerror = () => {
     document.getElementById("meta").textContent = "Error cargando datos.";
     script.remove();
@@ -224,5 +226,6 @@
 </script>
 </body>
 </html>
+
 
 
